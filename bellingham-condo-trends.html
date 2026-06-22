@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bellingham Condo &amp; Townhome Trends</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --bg: #f4f1ec; --surface: #ffffff; --surface2: #f9f7f4;
+  --border: #e2ddd6; --border2: #ccc8c0;
+  --text: #18160f; --text2: #5a5548; --text3: #8a847a;
+  --accent: #1f3d22; --accent2: #2e5733; --accent-light: #eaf2eb;
+  --blue-info: #1a4a7a; --blue-info-bg: #eef4fb;
+  --green-ok: #1f4a22; --green-ok-bg: #eaf4eb;
+  --warn: #7a4a16; --warn-bg: #fdf4e7;
+  --err: #7a1f16; --err-bg: #fdf0ee;
+  --c1: #2563a8; --c2: #d97706; --c3: #7c3aed; --c4: #059669;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; -webkit-font-smoothing: antialiased; }
+
+header { background: var(--accent); color: #fff; padding: 1.25rem 2.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+.header-title { display: flex; align-items: center; gap: 0.85rem; }
+.header-icon { width: 36px; height: 36px; background: rgba(255,255,255,0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.header-icon svg { width: 20px; height: 20px; fill: none; stroke: #fff; stroke-width: 2; }
+.header-text h1 { font-family: 'Fraunces', serif; font-size: 1.4rem; font-weight: 300; }
+.header-text p { font-size: 0.72rem; color: rgba(255,255,255,0.55); margin-top: 0.1rem; }
+.header-actions { display: flex; align-items: center; gap: 0.75rem; }
+.btn-upload { padding: 0.45rem 1rem; border: 1.5px solid rgba(255,255,255,0.4); border-radius: 7px; background: transparent; color: #fff; font-family: 'Inter', sans-serif; font-size: 0.78rem; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+.btn-upload:hover { background: rgba(255,255,255,0.15); }
+.btn-upload:disabled { opacity: 0.5; cursor: not-allowed; }
+.snapshot-count { font-size: 0.72rem; color: rgba(255,255,255,0.55); }
+#csvInput { display: none; }
+
+main { padding: 2rem 2.5rem; max-width: 1200px; margin: 0 auto; }
+
+.info-box { border-radius: 8px; padding: 0.85rem 1.1rem; font-size: 0.78rem; line-height: 1.6; margin-bottom: 1.75rem; }
+.info-box.blue { background: var(--blue-info-bg); border: 1px solid #b8d0ea; color: var(--blue-info); }
+.info-box.green { background: var(--green-ok-bg); border: 1px solid #a0c8a4; color: var(--green-ok); display: none; }
+.info-box.warn { background: var(--warn-bg); border: 1px solid #e0c090; color: var(--warn); display: none; }
+.info-box.err { background: var(--err-bg); border: 1px solid #e0a090; color: var(--err); display: none; }
+.info-box strong { font-weight: 600; }
+.btn-secondary { padding: 0.4rem 0.85rem; border: 1.5px solid var(--border2); border-radius: 7px; background: var(--surface); color: var(--text2); font-family: 'Inter', sans-serif; font-size: 0.78rem; font-weight: 500; cursor: pointer; }
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+.legend { display: flex; gap: 1.5rem; margin-bottom: 1.75rem; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--text2); font-weight: 500; }
+.legend-dot { width: 28px; height: 3px; border-radius: 2px; }
+
+.charts-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+.chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.5rem; }
+.chart-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); margin-bottom: 0.25rem; }
+.chart-title { font-family: 'Fraunces', serif; font-size: 1.1rem; font-weight: 300; color: var(--text); margin-bottom: 1.25rem; }
+.chart-wrap { position: relative; width: 100%; height: 220px; }
+
+.snapshots-section { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 2rem; }
+.snapshots-header { padding: 0.85rem 1.25rem; background: var(--surface2); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.snapshots-header span { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); }
+.snapshots-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.snapshots-table th { text-align: left; font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); padding: 0.6rem 1.25rem; border-bottom: 1px solid var(--border); background: var(--surface2); }
+.snapshots-table th:not(:first-child) { text-align: right; }
+.snapshots-table td { padding: 0.65rem 1.25rem; border-bottom: 1px solid var(--border); color: var(--text); }
+.snapshots-table td:not(:first-child) { text-align: right; color: var(--text2); }
+.snapshots-table tr:last-child td { border-bottom: none; }
+.snapshots-table tr:hover td { background: var(--surface2); }
+.bracket-tag { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.68rem; font-weight: 600; }
+.tag-1 { background: #dbeafe; color: #1e40af; }
+.tag-2 { background: #fef3c7; color: #92400e; }
+.tag-3 { background: #ede9fe; color: #5b21b6; }
+.tag-4 { background: #d1fae5; color: #065f46; }
+
+footer { border-top: 1px solid var(--border); padding: 1rem 2.5rem; font-size: 0.68rem; color: var(--text3); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
+
+@media (max-width: 768px) {
+  header, main, footer { padding-left: 1.25rem; padding-right: 1.25rem; }
+  .charts-grid { grid-template-columns: 1fr; }
+}
+
+/* ── DATE RANGE FILTER ── */
+.date-filter { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.5rem; padding: 0.85rem 1.1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font-size: 0.8rem; }
+.date-filter label { color: var(--text3); font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; }
+.date-filter input[type=date] { padding: 0.35rem 0.65rem; border: 1.5px solid var(--border); border-radius: 7px; font-family: 'Inter', sans-serif; font-size: 0.8rem; background: var(--surface); color: var(--text); transition: border-color 0.15s; }
+.date-filter input[type=date]:focus { outline: none; border-color: var(--accent); }
+.filter-sep { color: var(--text3); }
+.preset-btns { display: flex; gap: 0.4rem; margin-left: 0.5rem; flex-wrap: wrap; }
+.preset-btn { padding: 0.3rem 0.7rem; border: 1.5px solid var(--border); border-radius: 6px; font-size: 0.72rem; font-weight: 500; font-family: 'Inter', sans-serif; background: var(--surface); color: var(--text2); cursor: pointer; transition: background 0.12s, border-color 0.12s, color 0.12s; }
+.preset-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+.preset-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-light); font-weight: 600; }
+.filter-count { margin-left: auto; font-size: 0.72rem; color: var(--text3); white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-title">
+    <div class="header-icon">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    </div>
+    <div class="header-text">
+      <h1>Bellingham Condo &amp; Townhome Trends</h1>
+      <p>Condos &amp; townhomes &mdash; $300K&ndash;$1.1M &mdash; by price bracket over time</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <a href="index.html" style="display:flex;align-items:center;gap:6px;padding:0.45rem 1rem;border:1.5px solid rgba(255,255,255,0.4);border-radius:7px;color:#fff;font-size:0.78rem;font-weight:500;text-decoration:none;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='transparent'">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Dashboard
+    </a>
+    <span class="snapshot-count" id="snapCount">— snapshots</span>
+    <button class="btn-upload" id="addCsvBtn" onclick="document.getElementById('csvInput').click()">&#8593;&nbsp; Add Redfin CSV</button>
+    <input type="file" id="csvInput" accept=".csv" onchange="handleCSV(this)">
+  </div>
+</header>
+
+<main>
+  <div class="info-box blue" id="infoBox">
+    <strong>How to add more snapshots:</strong> Download a Redfin CSV (Bellingham WA &rarr; Condos &amp; Townhomes &rarr; List view &rarr; Download All) and click &ldquo;Add Redfin CSV&rdquo;. The new snapshot is added to <code>data.json</code> in your repo via GitHub. Make sure GitHub sync is configured on the dashboard's Update Data tab first.
+  </div>
+  <div class="info-box green" id="successBox"></div>
+  <div class="info-box warn" id="warnBox"></div>
+  <div class="info-box err" id="errBox"></div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--c1)"></div>$300K – $500K</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--c2)"></div>$500K – $700K</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--c3)"></div>$700K – $900K</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--c4)"></div>$900K – $1.1M</div>
+  </div>
+
+
+  <div class="date-filter" id="dateFilter">
+    <label>From</label>
+    <input type="date" id="filterFrom" onchange="applyFilter()">
+    <span class="filter-sep">–</span>
+    <label>To</label>
+    <input type="date" id="filterTo" onchange="applyFilter()">
+    <div class="preset-btns">
+      <button class="preset-btn active" id="preset-all" onclick="setPreset('all')">All</button>
+      <button class="preset-btn" id="preset-12mo" onclick="setPreset('12mo')">12 mo</button>
+      <button class="preset-btn" id="preset-6mo" onclick="setPreset('6mo')">6 mo</button>
+      <button class="preset-btn" id="preset-3mo" onclick="setPreset('3mo')">3 mo</button>
+    </div>
+    <span class="filter-count" id="filterCount"></span>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-label">Trend</div>
+      <div class="chart-title">% Pending</div>
+      <div class="chart-wrap"><canvas id="chartPct"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-label">Trend</div>
+      <div class="chart-title">Active (unsold) listings</div>
+      <div class="chart-wrap"><canvas id="chartActive"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-label">Trend</div>
+      <div class="chart-title">Current pendings</div>
+      <div class="chart-wrap"><canvas id="chartPend"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-label">Trend</div>
+      <div class="chart-title">Months of inventory</div>
+      <div class="chart-wrap"><canvas id="chartMOI"></canvas></div>
+    </div>
+  </div>
+
+  <div class="snapshots-section">
+    <div class="snapshots-header">
+      <span>Snapshot history</span>
+    </div>
+    <table class="snapshots-table">
+      <thead><tr>
+        <th>Date</th><th>Bracket</th><th>Active</th><th>Pending</th>
+        <th>% Pending</th><th>Sales (3 mo)</th><th>Months inv.</th>
+      </tr></thead>
+      <tbody id="snapshotBody"></tbody>
+    </table>
+  </div>
+</main>
+
+<footer>
+  <span>Bellingham Condo &amp; Townhome Trends &mdash; $300K&ndash;$1.1M</span>
+  <span id="footerTs"></span>
+</footer>
+
+<script>
+const DATA_URL = 'data.json';
+const STORAGE_KEY = 'mls_tracker_CONDO_v2';
+const GH_KEY = 'mls_tracker_gh_CONDO_v1';
+
+const BRACKETS = [
+  { name: '$300K–$500K', lo: 300000, hi: 500000,  color: '#2563a8', tagCls: 'tag-1' },
+  { name: '$500K–$700K', lo: 500000, hi: 700000,  color: '#d97706', tagCls: 'tag-2' },
+  { name: '$700K–$900K', lo: 700000, hi: 900000,  color: '#7c3aed', tagCls: 'tag-3' },
+  { name: '$900K–$1.1M', lo: 900000, hi: 1100000, color: '#059669', tagCls: 'tag-4' },
+];
+
+// In-memory copy of data.json
+let DATA = null;
+
+// ── DATA LOAD ──────────────────────────────────────────
+async function fetchDataJson() {
+  const url = DATA_URL + '?t=' + Date.now();
+  const r = await fetch(url, { cache: 'no-store' });
+  if (!r.ok) throw new Error('fetch failed: ' + r.status);
+  return await r.json();
+}
+function loadCachedData() {
+  try { const r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : null; }
+  catch(e) { return null; }
+}
+function cacheData(d) { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); }
+
+// ── GITHUB ─────────────────────────────────────────────
+function loadGhSettings() {
+  try { const r = localStorage.getItem(GH_KEY); return r ? JSON.parse(r) : null; }
+  catch(e) { return null; }
+}
+
+async function pushToGitHub() {
+  const s = loadGhSettings();
+  if (!s || !s.repo || !s.token) {
+    return { ok: false, error: 'GitHub sync not configured. Open the Dashboard → Update Data tab and configure GitHub sync first.' };
+  }
+
+  const attempt = async () => {
+    // Cache-bust the SHA fetch to avoid stale 409s
+    const getUrl = `https://api.github.com/repos/${s.repo}/contents/${DATA_URL}?ref=${encodeURIComponent(s.branch||'main')}&t=${Date.now()}`;
+    let sha = null;
+    let serverData = null;
+    const getResp = await fetch(getUrl, {
+      cache: 'no-store',
+      headers: {
+        'Authorization': 'Bearer ' + s.token,
+        'Accept': 'application/vnd.github+json',
+        'If-None-Match': ''
+      }
+    });
+    if (getResp.ok) {
+      const meta = await getResp.json();
+      sha = meta.sha;
+      try {
+        const decoded = decodeURIComponent(escape(atob(meta.content.replace(/\n/g, ''))));
+        serverData = JSON.parse(decoded);
+      } catch(e) {
+        console.warn('Could not decode server data.json, falling back to local DATA', e);
+      }
+    } else if (getResp.status !== 404) {
+      const body = await getResp.text();
+      return { ok: false, error: `GET failed (${getResp.status}): ${body.slice(0,200)}`, status: getResp.status };
+    }
+
+    // Build merged payload: trends only owns snapshots[]. Always preserve the
+    // server's dashboard so the trends page can never overwrite it with stale data.
+    let toPush;
+    if (serverData) {
+      toPush = {
+        version: DATA.version || serverData.version || 1,
+        updated: new Date().toISOString(),
+        dashboard: serverData.dashboard,   // <-- preserve server's dashboard
+        snapshots: DATA.snapshots          // <-- our updated snapshots
+      };
+      // Keep local DATA in sync with what we pushed
+      DATA.dashboard = serverData.dashboard;
+    } else {
+      toPush = DATA;
+    }
+
+    const content = JSON.stringify(toPush, null, 2) + '\n';
+    const b64 = btoa(unescape(encodeURIComponent(content)));
+    const putBody = {
+      message: `Add trend snapshot for ${DATA.snapshots[DATA.snapshots.length-1].date}`,
+      content: b64,
+      branch: s.branch || 'main'
+    };
+    if (sha) putBody.sha = sha;
+    const putResp = await fetch(`https://api.github.com/repos/${s.repo}/contents/${DATA_URL}`, {
+      method: 'PUT',
+      headers: { 'Authorization': 'Bearer ' + s.token, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(putBody)
+    });
+    if (!putResp.ok) {
+      const body = await putResp.text();
+      return { ok: false, error: `PUT failed (${putResp.status}): ${body.slice(0,200)}`, status: putResp.status };
+    }
+    return { ok: true };
+  };
+
+  try {
+    let result = await attempt();
+    if (!result.ok && result.status === 409) {
+      await new Promise(r => setTimeout(r, 800));
+      result = await attempt();
+    }
+    return result;
+  } catch(e) {
+    return { ok: false, error: 'Network error: ' + e.message };
+  }
+}
+
+// ── COMPUTED METRICS ───────────────────────────────────
+function metrics(b) {
+  const total = b.active + b.pendings;
+  const pctPend = total > 0 ? Math.round(b.pendings / total * 1000) / 10 : 0;
+  const salesMo = b.sales3mo / 3;
+  const moi = salesMo > 0 ? Math.round(b.active / salesMo * 10) / 10 : 0;
+  return { pctPend, salesMo: Math.round(salesMo * 10) / 10, moi };
+}
+
+// ── CHARTS ─────────────────────────────────────────────
+let charts = {};
+const CHART_DEFAULTS = {
+  responsive: true, maintainAspectRatio: false,
+  plugins: { legend: { display: false }, tooltip: {
+    backgroundColor: '#fff', titleColor: '#18160f', bodyColor: '#5a5548',
+    borderColor: '#e2ddd6', borderWidth: 1, padding: 10,
+    callbacks: { title: items => new Date(items[0].label+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) }
+  }},
+  scales: {
+    x: { grid: { color: '#f0ede8' }, ticks: { color: '#8a847a', font: { size: 11 }, maxRotation: 30 } },
+    y: { grid: { color: '#f0ede8' }, ticks: { color: '#8a847a', font: { size: 11 } }, beginAtZero: true }
+  },
+  elements: { point: { radius: 4, hoverRadius: 6, borderWidth: 2 }, line: { tension: 0.3, borderWidth: 2.5 } },
+};
+
+function makeDataset(snaps, bracketKey, valueFn, color) {
+  return {
+    data: snaps.map(s => valueFn(s[bracketKey])),
+    borderColor: color,
+    backgroundColor: color + '18',
+    fill: false,
+    pointBackgroundColor: '#fff',
+    pointBorderColor: color,
+  };
+}
+
+function initCharts(snaps) {
+  const labels = snaps.map(s => s.date);
+
+  const configs = [
+    { id: 'chartPct',    valueFn: b => metrics(b).pctPend,  suffix: '%' },
+    { id: 'chartActive', valueFn: b => b.active,             suffix: ''  },
+    { id: 'chartPend',   valueFn: b => b.pendings,           suffix: ''  },
+    { id: 'chartMOI',    valueFn: b => metrics(b).moi,       suffix: ' mo' },
+  ];
+
+  configs.forEach(({ id, valueFn, suffix }) => {
+    if (charts[id]) charts[id].destroy();
+    const ctx = document.getElementById(id).getContext('2d');
+    charts[id] = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: BRACKETS.map((br, i) => makeDataset(snaps, 'b'+i, valueFn, br.color))
+      },
+      options: {
+        ...CHART_DEFAULTS,
+        scales: {
+          ...CHART_DEFAULTS.scales,
+          y: {
+            ...CHART_DEFAULTS.scales.y,
+            ticks: { ...CHART_DEFAULTS.scales.y.ticks, callback: v => v + suffix }
+          },
+          x: {
+            ...CHART_DEFAULTS.scales.x,
+            ticks: { ...CHART_DEFAULTS.scales.x.ticks,
+              callback: function(val) {
+                const d = new Date(this.getLabelForValue(val)+'T12:00:00');
+                return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+              }
+            }
+          }
+        }
+      }
+    });
+  });
+}
+
+function renderTable(snaps) {
+  const tbody = document.getElementById('snapshotBody');
+  const rows = [];
+  const sorted = [...snaps].sort((a,b) => b.date.localeCompare(a.date));
+  sorted.forEach(s => {
+    BRACKETS.forEach((br, i) => {
+      const b = s['b'+i];
+      const m = metrics(b);
+      const dateStr = new Date(s.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      rows.push(`<tr>
+        <td>${dateStr}</td>
+        <td><span class="bracket-tag ${br.tagCls}">${br.name}</span></td>
+        <td>${b.active}</td>
+        <td>${b.pendings}</td>
+        <td>${m.pctPend}%</td>
+        <td>${b.sales3mo}</td>
+        <td>${m.moi}</td>
+      </tr>`);
+    });
+  });
+  tbody.innerHTML = rows.join('');
+  document.getElementById('snapCount').textContent = snaps.length + ' snapshot' + (snaps.length===1?'':'s');
+  document.getElementById('footerTs').textContent = 'Last updated: ' + new Date().toLocaleString();
+}
+
+// ── DATE RANGE FILTER ──────────────────────────────────
+let allSnaps = [];
+
+function filterSnaps(snaps) {
+  const fromVal = document.getElementById('filterFrom').value;
+  const toVal   = document.getElementById('filterTo').value;
+  return snaps.filter(s => {
+    if (fromVal && s.date < fromVal) return false;
+    if (toVal   && s.date > toVal)   return false;
+    return true;
+  });
+}
+
+function applyFilter() {
+  // Clear active state on preset buttons when dates are changed manually
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('preset-all').classList.add('active');
+
+  const filtered = filterSnaps(allSnaps);
+  const sorted = [...filtered].sort((a,b) => a.date.localeCompare(b.date));
+  const total = allSnaps.length;
+  const shown = filtered.length;
+  document.getElementById('filterCount').textContent =
+    shown === total ? `${total} snapshot${total===1?'':'s'}` : `${shown} of ${total} snapshot${total===1?'':'s'}`;
+  initCharts(sorted);
+  renderTable(filtered);
+}
+
+function setPreset(preset) {
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('preset-' + preset).classList.add('active');
+
+  const today = new Date();
+  const toStr = today.toISOString().slice(0,10);
+  let fromStr = '';
+  if (preset !== 'all') {
+    const months = preset === '3mo' ? 3 : preset === '6mo' ? 6 : 12;
+    const from = new Date(today);
+    from.setMonth(from.getMonth() - months);
+    fromStr = from.toISOString().slice(0,10);
+  }
+  document.getElementById('filterFrom').value = fromStr;
+  document.getElementById('filterTo').value = '';
+  applyFilter();
+}
+
+function renderAll(snaps) {
+  allSnaps = snaps;
+  // Initialize date pickers with data bounds on first load
+  if (snaps.length > 0) {
+    const dates = snaps.map(s => s.date).sort();
+    const fromInput = document.getElementById('filterFrom');
+    const toInput = document.getElementById('filterTo');
+    fromInput.min = dates[0];
+    toInput.min = dates[0];
+    fromInput.max = dates[dates.length-1];
+    toInput.max = dates[dates.length-1];
+  }
+  applyFilter();
+}
+
+// ── CSV PARSER ─────────────────────────────────────────
+function parseCSVRow(row) {
+  const result=[]; let cur='', inQ=false;
+  for (let ch of row) {
+    if (ch==='"'&&!inQ) inQ=true;
+    else if (ch==='"'&&inQ) inQ=false;
+    else if (ch===','&&!inQ) { result.push(cur.trim()); cur=''; }
+    else cur+=ch;
+  }
+  result.push(cur.trim());
+  return result;
+}
+
+function handleCSV(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => { parseRedfin(e.target.result, file.name); input.value=''; };
+  reader.readAsText(file);
+}
+
+// Try to interpret a CSV cell as a snapshot date.
+function tryParseSnapshotDate(raw) {
+  if (!raw) return null;
+  const s = raw.replace(/^["\s]+|["\s]+$/g, '').trim();
+  if (!s || s.length > 40) return null;
+  let m = s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/);
+  if (m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if (m) {
+    const yr = m[3].length === 2 ? '20' + m[3] : m[3];
+    return `${yr}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;
+  }
+  const d = new Date(s);
+  if (!isNaN(d) && d.getFullYear() > 2000 && d.getFullYear() < 2100) {
+    return d.toISOString().slice(0,10);
+  }
+  return null;
+}
+
+async function parseRedfin(csv, filename) {
+  const allLines = csv.split('\n').map(l=>l.trim()).filter(l=>l);
+  if (allLines.length < 2) { alert('CSV is empty or unreadable.'); return; }
+
+  // Detect "date in A1" format
+  const firstCells = parseCSVRow(allLines[0]);
+  const detectedDate = tryParseSnapshotDate(firstCells[0]);
+
+  let headers, dataLines;
+  if (detectedDate) {
+    headers = parseCSVRow(allLines[1]).map(h=>h.toUpperCase().trim());
+    dataLines = allLines.slice(2).filter(l => !l.toLowerCase().startsWith('"in accordance'));
+  } else {
+    headers = firstCells.map(h=>h.toUpperCase().trim());
+    dataLines = allLines.slice(1).filter(l => !l.toLowerCase().startsWith('"in accordance'));
+  }
+
+  const col = name => headers.indexOf(name);
+  const PRICE_COL=col('PRICE'), STATUS=col('STATUS');
+  const LOCATION=col('LOCATION'), SOLD_DATE=col('SOLD DATE'), PROP_TYPE=col('PROPERTY TYPE');
+
+  if (PRICE_COL<0) { alert('Could not read this file as a Redfin CSV.'); return; }
+
+  // Snapshot date priority: A1 cell > filename > today
+  let snapDate = detectedDate;
+  if (!snapDate) {
+    snapDate = new Date().toISOString().slice(0,10);
+    const match = (filename||'').match(/(\d{4})-(\d{1,2})[_-](\d{1,2})/);
+    if (match) {
+      const [_, y, m, d] = match;
+      snapDate = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+    }
+  }
+
+  const cutoff = new Date(snapDate); cutoff.setDate(cutoff.getDate()-92);
+  const counts = BRACKETS.map(()=>({active:0,pendings:0,sales3mo:0}));
+  let total=0, excluded=0;
+
+  dataLines.forEach(line => {
+    if (!line) return;
+    const cols = parseCSVRow(line);
+    if (cols.length<8) return;
+    // No neighborhood exclusions for condo/townhome tracker
+    const prop = (cols[PROP_TYPE]||'').toLowerCase();
+    if (prop && !prop.includes('condo') && !prop.includes('townhouse') && !prop.includes('townhome') && !prop.includes('co-op')) return;
+    const price = parseFloat((cols[PRICE_COL]||'').replace(/[$,\s]/g,''));
+    if (isNaN(price)) return;
+    const bidx = BRACKETS.findIndex(({lo,hi})=>price>=lo&&price<hi);
+    if (bidx<0) return;
+    const status = (cols[STATUS]||'').trim().toLowerCase();
+    const soldStr = (cols[SOLD_DATE]||'').trim();
+    if (status==='active') { counts[bidx].active++; total++; }
+    else if (status.includes('pending')||status.includes('contingent')) { counts[bidx].pendings++; total++; }
+    else if (status==='sold' && soldStr) {
+      try {
+        const datePart = soldStr.split(' ')[0].replace(/-/g,' ');
+        const soldDate = new Date(datePart);
+        if (!isNaN(soldDate) && soldDate>=cutoff) { counts[bidx].sales3mo++; total++; }
+      } catch(e) {}
+    }
+  });
+
+  // Update DATA in memory
+  const newSnap = { date: snapDate, b0: counts[0], b1: counts[1], b2: counts[2], b3: counts[3] };
+  const idx = DATA.snapshots.findIndex(s=>s.date===snapDate);
+  if (idx>=0) DATA.snapshots[idx] = newSnap;
+  else DATA.snapshots.push(newSnap);
+  DATA.updated = new Date().toISOString();
+
+  cacheData(DATA);
+  renderAll(DATA.snapshots);
+
+  // Hide notices
+  document.getElementById('infoBox').style.display='none';
+  document.getElementById('warnBox').style.display='none';
+  document.getElementById('errBox').style.display='none';
+
+  const box = document.getElementById('successBox');
+  box.style.display='block';
+  box.innerHTML=`<strong>&#10003; Snapshot parsed for ${snapDate}.</strong> Found ${total} condos/townhomes. Pushing to GitHub…`;
+
+  const btn = document.getElementById('addCsvBtn');
+  btn.disabled = true;
+
+  const result = await pushToGitHub();
+  btn.disabled = false;
+
+  if (result.ok) {
+    box.innerHTML=`<strong>&#10003; Snapshot for ${snapDate} added &amp; pushed to GitHub.</strong> ${total} condos/townhomes counted.`;
+  } else {
+    box.style.display='none';
+    const warn = document.getElementById('warnBox');
+    warn.style.display='block';
+    warn.innerHTML=`<strong>Snapshot saved locally, but GitHub push failed.</strong> ${result.error}
+      <br><button class="btn-secondary" style="margin-top:0.5rem;" onclick="retryPush()">Retry push</button>`;
+  }
+}
+
+async function retryPush() {
+  const warn = document.getElementById('warnBox');
+  warn.innerHTML = 'Retrying…';
+  const result = await pushToGitHub();
+  if (result.ok) {
+    warn.style.display='none';
+    const ok = document.getElementById('successBox');
+    ok.style.display='block';
+    ok.innerHTML='<strong>&#10003; Pushed to GitHub.</strong>';
+  } else {
+    warn.innerHTML = `<strong>Push failed again.</strong> ${result.error}
+      <br><button class="btn-secondary" style="margin-top:0.5rem;" onclick="retryPush()">Retry</button>`;
+  }
+}
+
+// ── INIT ───────────────────────────────────────────────
+async function init() {
+  try {
+    DATA = await fetchDataJson();
+  } catch(e) {
+    console.warn('data.json fetch failed, using cache', e);
+    DATA = loadCachedData() || { snapshots: [] };
+    const errBox = document.getElementById('errBox');
+    errBox.style.display = 'block';
+    errBox.innerHTML = '<strong>Could not load data.json from the server.</strong> Showing cached data from this browser.';
+  }
+  if (!Array.isArray(DATA.snapshots)) DATA.snapshots = [];
+  cacheData(DATA);
+  renderAll(DATA.snapshots);
+}
+
+init();
+</script>
+</body>
+</html>

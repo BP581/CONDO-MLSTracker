@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "updated": "2026-06-22T00:00:00.000Z",
+  "dashboard": {
+    "date": "2026-06-22",
+    "bands": [
+      {
+        "active": 0,
+        "pendings": 0,
+        "sales3mo": 0
+      },
+      {
+        "active": 0,
+        "pendings": 0,
+        "sales3mo": 0
+      },
+      {
+        "active": 0,
+        "pendings": 0,
+        "sales3mo": 0
+      },
+      {
+        "active": 0,
+        "pendings": 0,
+        "sales3mo": 0
+      }
+    ]
+  },
+  "snapshots": []
+}

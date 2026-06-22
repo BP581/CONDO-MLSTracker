@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bellingham Condo &amp; Townhome Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f4f1ec;
+  --surface: #ffffff;
+  --surface2: #f9f7f4;
+  --border: #e2ddd6;
+  --border2: #ccc8c0;
+  --text: #18160f;
+  --text2: #5a5548;
+  --text3: #8a847a;
+  --accent: #1f3d22;
+  --accent2: #2e5733;
+  --accent-light: #eaf2eb;
+  --hot: #7a1f16; --hot-bg: #fdf0ee;
+  --warm: #6b3e0a; --warm-bg: #fdf4e7;
+  --balanced: #1f3d22; --balanced-bg: #eaf2eb;
+  --cool: #163354; --cool-bg: #eaf1f9;
+  --blue-info: #1a4a7a; --blue-info-bg: #eef4fb;
+  --green-ok: #1f4a22; --green-ok-bg: #eaf4eb;
+  --warn: #7a4a16; --warn-bg: #fdf4e7;
+  --err: #7a1f16; --err-bg: #fdf0ee;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+
+/* ── APP ── */
+#app { display: block; }
+header { background: var(--accent); color: #fff; padding: 1.25rem 2.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+.header-title { display: flex; align-items: center; gap: 0.85rem; }
+.header-icon { width: 36px; height: 36px; background: rgba(255,255,255,0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.header-icon svg { width: 20px; height: 20px; fill: none; stroke: #fff; stroke-width: 2; }
+.header-text h1 { font-family: 'Fraunces', serif; font-size: 1.4rem; font-weight: 300; line-height: 1.1; letter-spacing: -0.01em; }
+.header-text p { font-size: 0.72rem; color: rgba(255,255,255,0.55); margin-top: 0.1rem; letter-spacing: 0.01em; }
+.header-right { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.header-date { font-size: 0.75rem; color: rgba(255,255,255,0.6); text-align: right; line-height: 1.6; }
+.header-date strong { color: #fff; font-weight: 500; }
+.tab-bar { display: flex; gap: 2px; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 3px; }
+.tab { padding: 0.35rem 0.9rem; font-size: 0.75rem; font-weight: 500; letter-spacing: 0.01em; border: none; cursor: pointer; border-radius: 6px; font-family: 'Inter', sans-serif; transition: background 0.15s, color 0.15s; }
+.tab.active { background: #fff; color: var(--accent); }
+.tab:not(.active) { background: transparent; color: rgba(255,255,255,0.6); }
+.tab:not(.active):hover { color: #fff; background: rgba(255,255,255,0.1); }
+
+main { padding: 2rem 2.5rem; max-width: 1200px; margin: 0 auto; }
+
+/* ── SUMMARY CARDS ── */
+.summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 2rem; }
+.summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem 1.5rem; }
+.summary-label { font-size: 0.72rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); margin-bottom: 0.5rem; }
+.summary-value { font-family: 'Fraunces', serif; font-size: 2.2rem; font-weight: 300; line-height: 1; color: var(--text); margin-bottom: 0.3rem; }
+.summary-sub { font-size: 0.75rem; color: var(--text2); }
+
+/* ── TABLE ── */
+.section-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); margin-bottom: 0.75rem; }
+.table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 2rem; }
+table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+thead th { text-align: right; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); background: var(--surface2); white-space: nowrap; }
+thead th:first-child { text-align: left; }
+tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--surface2); }
+tbody tr.total-row { background: var(--surface2); border-top: 1.5px solid var(--border2); }
+tbody tr.total-row:hover { background: #f0ede8; }
+td { padding: 0.75rem 1rem; text-align: right; color: var(--text); }
+td:first-child { text-align: left; font-weight: 500; color: var(--text); font-size: 0.875rem; }
+tr.total-row td { font-weight: 600; color: var(--text); }
+.pill { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 5px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.03em; }
+.pill-hot { background: var(--hot-bg); color: var(--hot); }
+.pill-warm { background: var(--warm-bg); color: var(--warm); }
+.pill-balanced { background: var(--balanced-bg); color: var(--balanced); }
+.pill-cool { background: var(--cool-bg); color: var(--cool); }
+
+/* ── CHARTS ── */
+.charts-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 1.25rem; margin-bottom: 2rem; }
+.chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem 1.5rem; }
+.chart-title { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); margin-bottom: 1rem; }
+.bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.bar-band { font-size: 0.75rem; color: var(--text2); width: 82px; flex-shrink: 0; text-align: right; }
+.bar-bg { flex: 1; background: var(--surface2); border-radius: 3px; height: 12px; overflow: hidden; border: 1px solid var(--border); }
+.bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
+.bar-val { font-size: 0.75rem; font-weight: 500; color: var(--text); width: 34px; flex-shrink: 0; text-align: right; }
+
+/* ── ENTRY FORM ── */
+.entry-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem; }
+.entry-header h2 { font-family: 'Fraunces', serif; font-weight: 300; font-size: 1.4rem; color: var(--text); }
+.entry-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.btn-upload { padding: 0.55rem 1rem; border: 1.5px solid var(--border2); border-radius: 7px; background: var(--surface); color: var(--text2); font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+.btn-upload:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+.btn-save { padding: 0.55rem 1.25rem; border: none; border-radius: 7px; background: var(--accent); color: #fff; font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 500; cursor: pointer; transition: background 0.15s; }
+.btn-save:hover { background: var(--accent2); }
+.btn-save:disabled { background: var(--text3); cursor: not-allowed; }
+.btn-secondary { padding: 0.45rem 0.85rem; border: 1.5px solid var(--border2); border-radius: 7px; background: var(--surface); color: var(--text2); font-family: 'Inter', sans-serif; font-size: 0.78rem; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+.info-box { border-radius: 8px; padding: 0.9rem 1.1rem; font-size: 0.8rem; line-height: 1.6; margin-bottom: 1.25rem; }
+.info-box.blue { background: var(--blue-info-bg); border: 1px solid #b8d0ea; color: var(--blue-info); }
+.info-box.green { background: var(--green-ok-bg); border: 1px solid #a0c8a4; color: var(--green-ok); display: none; }
+.info-box.warn { background: var(--warn-bg); border: 1px solid #e0c090; color: var(--warn); display: none; }
+.info-box.err { background: var(--err-bg); border: 1px solid #e0a090; color: var(--err); display: none; }
+.info-box strong { font-weight: 600; }
+.snap-date-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem; font-size: 0.8rem; color: var(--text2); font-weight: 500; }
+.snap-date-row input[type=date] { padding: 0.45rem 0.75rem; border: 1.5px solid var(--border); border-radius: 7px; font-family: 'Inter', sans-serif; font-size: 0.8rem; background: var(--surface); color: var(--text); transition: border-color 0.15s; }
+.snap-date-row input[type=date]:focus { outline: none; border-color: var(--accent); }
+.entry-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 1.5rem; }
+.entry-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.entry-table th { text-align: left; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); background: var(--surface2); }
+.entry-table th:not(:first-child) { text-align: center; }
+.entry-table td { padding: 0.6rem 1rem; border-bottom: 1px solid var(--border); }
+.entry-table tr:last-child td { border-bottom: none; }
+.entry-table tr:hover td { background: var(--surface2); }
+.entry-table td:first-child { color: var(--text); font-weight: 500; font-size: 0.875rem; }
+.entry-table td:not(:first-child) { text-align: center; }
+.entry-table input[type=number] { width: 72px; padding: 0.4rem 0.5rem; text-align: center; border: 1.5px solid var(--border); border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.875rem; background: var(--surface); color: var(--text); transition: border-color 0.15s; }
+.entry-table input[type=number]:focus { outline: none; border-color: var(--accent); background: #fff; }
+.entry-table input.csv-filled { border-color: #4caf72; background: #f2fbf4; }
+.save-success { display: none; font-size: 0.78rem; font-weight: 500; color: var(--green-ok); background: var(--green-ok-bg); border: 1px solid #a0c8a4; border-radius: 7px; padding: 0.5rem 1rem; }
+#csvInput { display: none; }
+
+/* ── GITHUB SETTINGS ── */
+.gh-settings { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }
+.gh-settings-header { display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+.gh-settings-title { font-size: 0.85rem; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 0.5rem; }
+.gh-status-dot { width: 8px; height: 8px; border-radius: 50%; }
+.gh-status-dot.ok { background: #4caf72; }
+.gh-status-dot.warn { background: #d97706; }
+.gh-status-dot.err { background: #c0392b; }
+.gh-status-dot.unknown { background: var(--border2); }
+.gh-settings-body { margin-top: 1rem; display: none; }
+.gh-settings-body.open { display: block; }
+.gh-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; flex-wrap: wrap; }
+.gh-row label { font-size: 0.78rem; color: var(--text2); font-weight: 500; min-width: 120px; }
+.gh-row input[type=text], .gh-row input[type=password] { flex: 1; min-width: 220px; padding: 0.45rem 0.7rem; border: 1.5px solid var(--border); border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 0.8rem; background: var(--surface); color: var(--text); }
+.gh-row input:focus { outline: none; border-color: var(--accent); }
+.gh-help { font-size: 0.74rem; color: var(--text3); line-height: 1.6; margin-top: 0.5rem; }
+.gh-help a { color: var(--accent); }
+.chevron { transition: transform 0.15s; color: var(--text3); }
+.chevron.open { transform: rotate(90deg); }
+
+/* ── FOOTER ── */
+footer { border-top: 1px solid var(--border); padding: 1rem 2.5rem; font-size: 0.72rem; color: var(--text3); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+
+@media (max-width: 768px) {
+  header, main, footer { padding-left: 1.25rem; padding-right: 1.25rem; }
+  .summary-grid { grid-template-columns: repeat(2,1fr); }
+  .charts-grid { grid-template-columns: 1fr; }
+  .header-right { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+  thead th:nth-child(n+5), td:nth-child(n+5) { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <div class="header-title">
+      <div class="header-icon">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
+      <div class="header-text">
+        <h1>Bellingham Condo &amp; Townhome Tracker</h1>
+        <p>Condos &amp; townhomes &mdash; all Bellingham neighborhoods</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="tab-bar">
+        <button class="tab active" id="tabDash" onclick="showTab('dashboard')">Dashboard</button>
+        <button class="tab" id="tabEntry" onclick="showTab('entry')">Update Data</button>
+      </div>
+      <div class="header-date"><strong id="hdrDate">—</strong><br>Last snapshot</div>
+      <a href="bellingham-condo-trends.html" style="display:flex;align-items:center;gap:6px;padding:0.45rem 1rem;border:1.5px solid rgba(255,255,255,0.4);border-radius:7px;color:#fff;font-size:0.78rem;font-weight:500;text-decoration:none;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='transparent'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        View Trends
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <!-- DASHBOARD -->
+    <div id="panelDashboard">
+      <div class="summary-grid" id="summaryGrid"></div>
+      <div class="section-label" style="margin-top:0.25rem">By price band</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Price band</th><th>Active</th><th>Pending</th><th>% Pending</th>
+            <th>Sales (3 mo)</th><th>Sales / mo</th><th>Months inv.</th><th>Market</th>
+          </tr></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div class="charts-grid">
+        <div class="chart-card"><div class="chart-title">Months of inventory by price band</div><div id="invChart"></div></div>
+        <div class="chart-card"><div class="chart-title">% pending by price band</div><div id="pendChart"></div></div>
+      </div>
+    </div>
+
+    <!-- ENTRY -->
+    <div id="panelEntry" style="display:none">
+      <div class="entry-header">
+        <h2>Update market data</h2>
+        <div class="entry-actions">
+          <button class="btn-upload" onclick="document.getElementById('csvInput').click()">&#8593;&nbsp; Upload Redfin CSV</button>
+          <input type="file" id="csvInput" accept=".csv" onchange="handleCSV(this)">
+          <button class="btn-save" id="saveBtn" onclick="saveData()">Save &amp; Push to GitHub</button>
+          <div class="save-success" id="saveSuccess">&#10003;&nbsp; Saved!</div>
+        </div>
+      </div>
+
+      <!-- GitHub settings -->
+      <div class="gh-settings">
+        <div class="gh-settings-header" onclick="toggleGhSettings()">
+          <div class="gh-settings-title">
+            <span class="gh-status-dot unknown" id="ghStatusDot"></span>
+            <span>GitHub sync</span>
+            <span style="color:var(--text3); font-weight:400; font-size:0.78rem;" id="ghStatusText">— click to configure</span>
+          </div>
+          <span class="chevron" id="ghChevron">&#9656;</span>
+        </div>
+        <div class="gh-settings-body" id="ghBody">
+          <div class="gh-row">
+            <label>Owner / Repo</label>
+            <input type="text" id="ghRepo" placeholder="bp581/CONDO-MLSTracker">
+          </div>
+          <div class="gh-row">
+            <label>Branch</label>
+            <input type="text" id="ghBranch" placeholder="main" style="max-width:160px;">
+          </div>
+          <div class="gh-row">
+            <label>Personal access token</label>
+            <input type="password" id="ghToken" placeholder="github_pat_...">
+            <button class="btn-secondary" onclick="testGhConnection()">Test connection</button>
+          </div>
+          <div class="gh-help">
+            Token is stored in your browser only (localStorage on this device). Create a fine-grained PAT at
+            <a href="https://github.com/settings/personal-access-tokens" target="_blank">github.com/settings/personal-access-tokens</a> &mdash;
+            scope it to this single repo with <strong>Contents: Read &amp; write</strong>.
+            <span id="ghTestResult" style="margin-left:0.5rem;"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-box blue">
+        <strong>How to get your Redfin CSV:</strong> Go to redfin.com &rarr; search Bellingham WA &rarr; filter to <em>Condos &amp; Townhomes</em> &rarr; switch to List view &rarr; scroll to the bottom &rarr; click <em>Download All</em>. Then click &ldquo;Upload Redfin CSV&rdquo; above. Active listings, pendings, and recent sales will be counted automatically by price band.
+      </div>
+
+      <div class="info-box green" id="csvSuccess"></div>
+      <div class="info-box warn" id="pushWarn"></div>
+      <div class="info-box err" id="pushErr"></div>
+
+      <div class="snap-date-row">
+        <label for="snapDate">Snapshot date</label>
+        <input type="date" id="snapDate">
+      </div>
+
+      <div class="entry-wrap">
+        <table class="entry-table">
+          <thead><tr>
+            <th>Price band</th>
+            <th>Active listings</th>
+            <th>Current pendings</th>
+            <th>Sales past 3 months</th>
+          </tr></thead>
+          <tbody id="entryBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Danger zone -->
+      <div style="margin-top: 2.5rem; padding: 1rem 1.25rem; border: 1px dashed var(--border2); border-radius: 10px; background: var(--surface2);">
+        <div style="font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); margin-bottom: 0.5rem;">Danger zone</div>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+          <div style="font-size: 0.78rem; color: var(--text2); line-height: 1.6; flex: 1; min-width: 240px;">
+            <strong>Clear all data</strong> wipes both the dashboard and all snapshot history, then pushes an empty <code>data.json</code> to GitHub. Anyone visiting the site will see an empty dashboard until you upload again.
+          </div>
+          <button onclick="clearAllData()" style="padding: 0.5rem 1rem; border: 1.5px solid #c0392b; border-radius: 7px; background: var(--surface); color: #c0392b; font-family: 'Inter', sans-serif; font-size: 0.78rem; font-weight: 500; cursor: pointer; white-space: nowrap;" onmouseover="this.style.background='#c0392b'; this.style.color='#fff';" onmouseout="this.style.background='var(--surface)'; this.style.color='#c0392b';">Clear all data</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <span>Bellingham Condo &amp; Townhome Tracker &mdash; $300K–$1.1M</span>
+    <span id="footerTs"></span>
+  </footer>
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────
+const DATA_URL    = 'data.json';
+const STORAGE_KEY = 'mls_tracker_CONDO_v2';   // local cache fallback
+const GH_KEY      = 'mls_tracker_gh_CONDO_v1'; // github settings
+
+const BANDS = [
+  '$300K–$500K','$500K–$700K','$700K–$900K','$900K–$1.1M'
+];
+const BAND_RANGES = [
+  [300000,500000],[500000,700000],[700000,900000],[900000,1100000]
+];
+
+// Trends page brackets — kept here so we can update snapshots[] on push
+const BRACKETS = [
+  { lo: 300000, hi: 500000  },
+  { lo: 500000, hi: 700000  },
+  { lo: 700000, hi: 900000  },
+  { lo: 900000, hi: 1100000 },
+];
+
+// Used only if data.json fetch fails AND localStorage is empty
+const FALLBACK = {
+  version: 1,
+  dashboard: {
+    date: '2026-06-22',
+    bands: BANDS.map(()=>({active:0,pendings:0,sales3mo:0}))
+  },
+  snapshots: []
+};
+
+// In-memory copy of the full data.json document
+let DATA = null;
+
+// ── GITHUB SETTINGS ─────────────────────────────────────
+function loadGhSettings() {
+  try {
+    const r = localStorage.getItem(GH_KEY);
+    return r ? JSON.parse(r) : { repo: 'bp581/CONDO-MLSTracker', branch: 'main', token: '' };
+  } catch(e) { return { repo: 'bp581/CONDO-MLSTracker', branch: 'main', token: '' }; }
+}
+function saveGhSettings() {
+  const s = {
+    repo: document.getElementById('ghRepo').value.trim(),
+    branch: document.getElementById('ghBranch').value.trim() || 'main',
+    token: document.getElementById('ghToken').value.trim()
+  };
+  localStorage.setItem(GH_KEY, JSON.stringify(s));
+  return s;
+}
+function setGhStatus(state, text) {
+  const dot = document.getElementById('ghStatusDot');
+  const txt = document.getElementById('ghStatusText');
+  dot.className = 'gh-status-dot ' + state;
+  if (txt) txt.textContent = '— ' + text;
+}
+function toggleGhSettings() {
+  const body = document.getElementById('ghBody');
+  const chev = document.getElementById('ghChevron');
+  body.classList.toggle('open');
+  chev.classList.toggle('open');
+}
+async function testGhConnection() {
+  const s = saveGhSettings();
+  const result = document.getElementById('ghTestResult');
+  if (!s.repo || !s.token) {
+    result.innerHTML = '<span style="color:var(--err)">Enter repo and token first.</span>';
+    setGhStatus('err', 'not configured');
+    return;
+  }
+  result.innerHTML = '<span style="color:var(--text3)">Testing…</span>';
+  try {
+    const url = `https://api.github.com/repos/${s.repo}/contents/${DATA_URL}?ref=${encodeURIComponent(s.branch)}`;
+    const r = await fetch(url, { headers: { 'Authorization': 'Bearer ' + s.token, 'Accept': 'application/vnd.github+json' } });
+    if (r.ok) {
+      result.innerHTML = '<span style="color:var(--green-ok)">&#10003; Connected — data.json found.</span>';
+      setGhStatus('ok', 'connected');
+    } else if (r.status === 404) {
+      result.innerHTML = '<span style="color:var(--warn)">Repo OK but data.json not found yet — first save will create it.</span>';
+      setGhStatus('warn', 'data.json missing (will be created)');
+    } else if (r.status === 401 || r.status === 403) {
+      result.innerHTML = '<span style="color:var(--err)">Auth failed — check token scope (Contents: Read &amp; write).</span>';
+      setGhStatus('err', 'auth failed');
+    } else {
+      result.innerHTML = `<span style="color:var(--err)">Error ${r.status}</span>`;
+      setGhStatus('err', 'error ' + r.status);
+    }
+  } catch(e) {
+    result.innerHTML = '<span style="color:var(--err)">Network error: ' + e.message + '</span>';
+    setGhStatus('err', 'network error');
+  }
+}
+
+// ── DATA LOAD / SAVE ────────────────────────────────────
+async function fetchDataJson() {
+  // Cache-bust: GitHub Pages serves with caching headers
+  const url = DATA_URL + '?t=' + Date.now();
+  const r = await fetch(url, { cache: 'no-store' });
+  if (!r.ok) throw new Error('fetch failed: ' + r.status);
+  return await r.json();
+}
+
+function loadCachedData() {
+  try { const r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : null; }
+  catch(e) { return null; }
+}
+function cacheData(d) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
+}
+
+// Push the in-memory DATA object to GitHub via the Contents API.
+// Returns { ok: true } or { ok: false, error: '...' }
+async function pushToGitHub() {
+  const s = loadGhSettings();
+  if (!s.repo || !s.token) return { ok: false, error: 'GitHub sync not configured (open the GitHub sync panel above)' };
+
+  // Try once. If we hit a 409 stale-SHA error, refetch and retry once more.
+  const attempt = async () => {
+    // 1. Get the current file SHA AND content (we need both to merge safely).
+    // Cache-bust to avoid GitHub's CDN serving a stale SHA.
+    const getUrl = `https://api.github.com/repos/${s.repo}/contents/${DATA_URL}?ref=${encodeURIComponent(s.branch)}&t=${Date.now()}`;
+    let sha = null;
+    let serverData = null;
+    const getResp = await fetch(getUrl, {
+      cache: 'no-store',
+      headers: {
+        'Authorization': 'Bearer ' + s.token,
+        'Accept': 'application/vnd.github+json',
+        'If-None-Match': '' // bypass ETag-based caching
+      }
+    });
+    if (getResp.ok) {
+      const meta = await getResp.json();
+      sha = meta.sha;
+      // Decode the server's current data.json so we can merge into it
+      try {
+        const decoded = decodeURIComponent(escape(atob(meta.content.replace(/\n/g, ''))));
+        serverData = JSON.parse(decoded);
+      } catch(e) {
+        console.warn('Could not decode server data.json, falling back to local DATA', e);
+      }
+    } else if (getResp.status !== 404) {
+      const body = await getResp.text();
+      return { ok: false, error: `GET failed (${getResp.status}): ${body.slice(0,200)}`, status: getResp.status };
+    }
+
+    // 2. Build merged payload:
+    //    - Take server's snapshots as the base (so we don't clobber trends pushes)
+    //    - Replace dashboard with ours
+    //    - Upsert our local snapshot for the current dashboard date
+    //    - If server fetch failed (404 on first ever push), just use our DATA
+    let toPush;
+    if (serverData) {
+      const mergedSnapshots = Array.isArray(serverData.snapshots) ? [...serverData.snapshots] : [];
+      // Find our local snapshot for today's dashboard date
+      const localSnap = (DATA.snapshots || []).find(sn => sn.date === DATA.dashboard.date);
+      if (localSnap) {
+        const idx = mergedSnapshots.findIndex(sn => sn.date === localSnap.date);
+        if (idx >= 0) mergedSnapshots[idx] = localSnap;
+        else mergedSnapshots.push(localSnap);
+      }
+      toPush = {
+        version: DATA.version || serverData.version || 1,
+        updated: new Date().toISOString(),
+        dashboard: DATA.dashboard,
+        snapshots: mergedSnapshots
+      };
+      // Keep our in-memory DATA in sync with what we just pushed
+      DATA.snapshots = mergedSnapshots;
+    } else {
+      toPush = DATA;
+    }
+
+    const content = JSON.stringify(toPush, null, 2) + '\n';
+    const b64 = btoa(unescape(encodeURIComponent(content)));
+    const putBody = {
+      message: `Update dashboard — snapshot ${DATA.dashboard.date}`,
+      content: b64,
+      branch: s.branch
+    };
+    if (sha) putBody.sha = sha;
+
+    const putResp = await fetch(`https://api.github.com/repos/${s.repo}/contents/${DATA_URL}`, {
+      method: 'PUT',
+      headers: { 'Authorization': 'Bearer ' + s.token, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(putBody)
+    });
+    if (!putResp.ok) {
+      const body = await putResp.text();
+      return { ok: false, error: `PUT failed (${putResp.status}): ${body.slice(0,200)}`, status: putResp.status };
+    }
+    return { ok: true };
+  };
+
+  try {
+    let result = await attempt();
+    if (!result.ok && result.status === 409) {
+      // Stale SHA — wait a beat and retry with a fresh fetch
+      await new Promise(r => setTimeout(r, 800));
+      result = await attempt();
+    }
+    return result;
+  } catch(e) {
+    return { ok: false, error: 'Network error: ' + e.message };
+  }
+}
+
+// ── UPDATE TRENDS SNAPSHOT (called from saveData) ───────
+// When we save the dashboard, we also roll up totals into the
+// 3-bracket snapshots[] array used by the trends page.
+function rollUpToBrackets(dashboard) {
+  // dashboard.bands is 4 entries matching BAND_RANGES — each IS its own bracket
+  const out = BRACKETS.map(()=>({active:0,pendings:0,sales3mo:0}));
+  dashboard.bands.forEach((b, i) => {
+    const [lo, hi] = BAND_RANGES[i];
+    const bracketIdx = BRACKETS.findIndex(br => lo >= br.lo && hi <= br.hi);
+    if (bracketIdx >= 0) {
+      out[bracketIdx].active   += b.active;
+      out[bracketIdx].pendings += b.pendings;
+      out[bracketIdx].sales3mo += b.sales3mo;
+    }
+  });
+  return { b0: out[0], b1: out[1], b2: out[2], b3: out[3] };
+}
+
+function upsertSnapshot(dashboard) {
+  if (!Array.isArray(DATA.snapshots)) DATA.snapshots = [];
+  const rolled = rollUpToBrackets(dashboard);
+  const newSnap = { date: dashboard.date, b0: rolled.b0, b1: rolled.b1, b2: rolled.b2, b3: rolled.b3 };
+  const idx = DATA.snapshots.findIndex(s => s.date === dashboard.date);
+  if (idx >= 0) DATA.snapshots[idx] = newSnap;
+  else DATA.snapshots.push(newSnap);
+}
+
+// ── SAVE FLOW ───────────────────────────────────────────
+async function saveData() {
+  // Force-capture any unsaved GitHub settings before we push
+  saveGhSettings();
+
+  const date = document.getElementById('snapDate').value || new Date().toISOString().slice(0,10);
+  const bands = BANDS.map((_,i) => ({
+    active:   parseInt(document.getElementById('a'+i).value)||0,
+    pendings: parseInt(document.getElementById('p'+i).value)||0,
+    sales3mo: parseInt(document.getElementById('s'+i).value)||0,
+  }));
+
+  // Update in-memory DATA
+  DATA.dashboard = { date, bands };
+  upsertSnapshot(DATA.dashboard);
+  DATA.updated = new Date().toISOString();
+  DATA.version = DATA.version || 1;
+
+  // Always cache locally first
+  cacheData(DATA);
+
+  // Render immediately
+  renderDashboard(DATA.dashboard);
+
+  // Hide previous notices
+  document.getElementById('pushWarn').style.display = 'none';
+  document.getElementById('pushErr').style.display = 'none';
+
+  // Push to GitHub
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true; btn.textContent = 'Pushing…';
+
+  const result = await pushToGitHub();
+
+  btn.disabled = false; btn.textContent = 'Save & Push to GitHub';
+
+  if (result.ok) {
+    setGhStatus('ok', 'last push: ' + new Date().toLocaleTimeString());
+    const ok = document.getElementById('saveSuccess');
+    ok.style.display = 'inline-block';
+    ok.textContent = '\u2713 Saved & pushed to GitHub';
+    setTimeout(()=>ok.style.display='none', 3500);
+  } else {
+    setGhStatus('warn', 'push failed — saved locally');
+    const warn = document.getElementById('pushWarn');
+    warn.style.display = 'block';
+    warn.innerHTML = `<strong>Saved locally, but GitHub push failed.</strong> ${result.error}
+      <br><button class="btn-secondary" style="margin-top:0.5rem;" onclick="retryPush()">Retry push</button>`;
+  }
+}
+
+async function retryPush() {
+  const warn = document.getElementById('pushWarn');
+  warn.innerHTML = 'Retrying…';
+  const result = await pushToGitHub();
+  if (result.ok) {
+    warn.style.display = 'none';
+    setGhStatus('ok', 'last push: ' + new Date().toLocaleTimeString());
+    const ok = document.getElementById('saveSuccess');
+    ok.style.display = 'inline-block';
+    ok.textContent = '\u2713 Pushed to GitHub';
+    setTimeout(()=>ok.style.display='none', 3500);
+  } else {
+    warn.innerHTML = `<strong>Push failed again.</strong> ${result.error}
+      <br><button class="btn-secondary" style="margin-top:0.5rem;" onclick="retryPush()">Retry</button>`;
+  }
+}
+
+// ── CLEAR ALL DATA ──────────────────────────────────────
+async function clearAllData() {
+  const ok1 = confirm('This will wipe the dashboard AND all snapshot history. Anyone visiting the site will see an empty dashboard until you upload again.\n\nAre you sure?');
+  if (!ok1) return;
+  const ok2 = confirm('Last chance — this pushes an empty data.json to GitHub and cannot be undone (except by re-uploading CSVs).\n\nProceed?');
+  if (!ok2) return;
+
+  // Force-save GH settings in case they were just typed
+  saveGhSettings();
+
+  // Reset DATA in memory
+  DATA = {
+    version: 1,
+    updated: new Date().toISOString(),
+    dashboard: {
+      date: new Date().toISOString().slice(0,10),
+      bands: BANDS.map(()=>({active:0,pendings:0,sales3mo:0}))
+    },
+    snapshots: []
+  };
+  cacheData(DATA);
+  renderDashboard(DATA.dashboard);
+  renderEntryForm(DATA.dashboard);
+
+  document.getElementById('pushWarn').style.display = 'none';
+  document.getElementById('pushErr').style.display = 'none';
+  document.getElementById('csvSuccess').style.display = 'none';
+
+  const result = await pushToGitHub();
+  if (result.ok) {
+    setGhStatus('ok', 'cleared & pushed: ' + new Date().toLocaleTimeString());
+    const okBox = document.getElementById('saveSuccess');
+    okBox.style.display = 'inline-block';
+    okBox.textContent = '\u2713 All data cleared & pushed';
+    setTimeout(()=>okBox.style.display='none', 4000);
+  } else {
+    const warn = document.getElementById('pushWarn');
+    warn.style.display = 'block';
+    warn.innerHTML = `<strong>Cleared locally, but GitHub push failed.</strong> ${result.error}
+      <br><button class="btn-secondary" style="margin-top:0.5rem;" onclick="retryPush()">Retry push</button>`;
+  }
+}
+
+// ── TAB ─────────────────────────────────────────────────
+function showTab(tab) {
+  document.getElementById('panelDashboard').style.display = tab==='dashboard'?'':'none';
+  document.getElementById('panelEntry').style.display     = tab==='entry'?'':'none';
+  document.getElementById('tabDash').classList.toggle('active', tab==='dashboard');
+  document.getElementById('tabEntry').classList.toggle('active', tab==='entry');
+}
+
+// ── FORMATTING / RENDERING ──────────────────────────────
+function fmt(n, dec=1) { return (isFinite(n)&&!isNaN(n)) ? n.toFixed(dec) : '—'; }
+function market(moi) {
+  if (!isFinite(moi)||moi===0) return {text:'—',cls:''};
+  if (moi<1.5) return {text:"Seller's",cls:'pill-hot'};
+  if (moi<3)   return {text:'Warm seller',cls:'pill-warm'};
+  if (moi<=6)  return {text:'Balanced',cls:'pill-balanced'};
+  return {text:"Buyer's",cls:'pill-cool'};
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+}
+
+function renderDashboard(data) {
+  const {date,bands} = data;
+  document.getElementById('hdrDate').textContent = fmtDate(date);
+  document.getElementById('footerTs').textContent = 'Snapshot: '+fmtDate(date);
+  let tA=0,tP=0,tS=0;
+  bands.forEach(b=>{tA+=b.active;tP+=b.pendings;tS+=b.sales3mo;});
+  const tpm=tS/3, tMoi=tpm>0?tA/tpm:Infinity, tPct=(tA+tP)>0?tP/(tA+tP)*100:0, mk=market(tMoi);
+
+  document.getElementById('summaryGrid').innerHTML=[
+    {label:'Active listings',value:tA,sub:'all price bands'},
+    {label:'Pending',value:tP,sub:fmt(tPct,0)+'% of market'},
+    {label:'Sales / month',value:fmt(tpm),sub:'trailing 3-month avg'},
+    {label:'Months of inventory',value:fmt(tMoi),sub:mk.text+' conditions'},
+  ].map(d=>`<div class="summary-card"><div class="summary-label">${d.label}</div><div class="summary-value">${d.value}</div><div class="summary-sub">${d.sub}</div></div>`).join('');
+
+  document.getElementById('tableBody').innerHTML = bands.map((b,i)=>{
+    const pm=b.sales3mo/3,moi=pm>0?b.active/pm:Infinity,tot=b.active+b.pendings,pct=tot>0?b.pendings/tot*100:0,mk2=market(moi);
+    return `<tr><td>${BANDS[i]}</td><td>${b.active}</td><td>${b.pendings}</td><td>${fmt(pct,0)}%</td><td>${b.sales3mo}</td><td>${fmt(pm)}</td><td>${isFinite(moi)?fmt(moi):'—'}</td><td>${mk2.cls?`<span class="pill ${mk2.cls}">${mk2.text}</span>`:'—'}</td></tr>`;
+  }).join('')+`<tr class="total-row"><td>All bands</td><td>${tA}</td><td>${tP}</td><td>${fmt(tPct,0)}%</td><td>${tS}</td><td>${fmt(tpm)}</td><td>${fmt(tMoi)}</td><td>${mk.cls?`<span class="pill ${mk.cls}">${mk.text}</span>`:'—'}</td></tr>`;
+
+  const mMoi=Math.max(...bands.map(b=>{const p=b.sales3mo/3;return p>0?b.active/p:0;}));
+  const mPct=Math.max(...bands.map(b=>{const t=b.active+b.pendings;return t>0?b.pendings/t*100:0;}));
+
+  document.getElementById('invChart').innerHTML=bands.map((b,i)=>{
+    const p=b.sales3mo/3,moi=p>0?b.active/p:0,pct=mMoi>0?moi/mMoi*100:0;
+    const col=moi<1.5?'#b94040':moi<3?'#c07820':moi<=6?'#2e5733':'#2a5a8a';
+    return `<div class="bar-row"><div class="bar-band">${BANDS[i].replace('$','')}</div><div class="bar-bg"><div class="bar-fill" style="width:${pct.toFixed(1)}%;background:${col}"></div></div><div class="bar-val">${moi>0?fmt(moi):'—'}</div></div>`;
+  }).join('');
+
+  document.getElementById('pendChart').innerHTML=bands.map((b,i)=>{
+    const t=b.active+b.pendings,pv=t>0?b.pendings/t*100:0,pct=mPct>0?pv/mPct*100:0;
+    return `<div class="bar-row"><div class="bar-band">${BANDS[i].replace('$','')}</div><div class="bar-bg"><div class="bar-fill" style="width:${pct.toFixed(1)}%;background:#2e5733"></div></div><div class="bar-val">${fmt(pv,0)}%</div></div>`;
+  }).join('');
+}
+
+function renderEntryForm(data) {
+  document.getElementById('snapDate').value = data.date||'';
+  document.getElementById('entryBody').innerHTML = BANDS.map((band,i)=>{
+    const b=data.bands[i]||{active:0,pendings:0,sales3mo:0};
+    return `<tr><td>${band}</td><td><input type="number" id="a${i}" value="${b.active}" min="0"></td><td><input type="number" id="p${i}" value="${b.pendings}" min="0"></td><td><input type="number" id="s${i}" value="${b.sales3mo}" min="0"></td></tr>`;
+  }).join('');
+}
+
+// ── CSV PARSING (unchanged from previous version) ───────
+function parseCSVRow(row) {
+  const result=[]; let cur='', inQ=false;
+  for (let i=0;i<row.length;i++) {
+    if (row[i]==='"'&&!inQ) inQ=true;
+    else if (row[i]==='"'&&inQ) inQ=false;
+    else if (row[i]===','&&!inQ) { result.push(cur.trim()); cur=''; }
+    else cur+=row[i];
+  }
+  result.push(cur.trim());
+  return result;
+}
+
+function handleCSV(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => { parseRedfin(e.target.result); input.value=''; };
+  reader.readAsText(file);
+}
+
+// Try to interpret a CSV cell as a snapshot date.
+// Accepts: 2026-05-04, 5/4/2026, 5-4-26, May 4 2026, May 4, 2026, etc.
+// Returns 'YYYY-MM-DD' on success, null otherwise.
+function tryParseSnapshotDate(raw) {
+  if (!raw) return null;
+  const s = raw.replace(/^["\s]+|["\s]+$/g, '').trim();
+  if (!s || s.length > 40) return null;
+
+  // ISO YYYY-MM-DD or YYYY/MM/DD
+  let m = s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/);
+  if (m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+
+  // M/D/YYYY or M-D-YYYY (US-style)
+  m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if (m) {
+    const yr = m[3].length === 2 ? '20' + m[3] : m[3];
+    return `${yr}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;
+  }
+
+  // Fallback: let JS try (handles "May 4, 2026", "May 4 2026", etc.)
+  const d = new Date(s);
+  if (!isNaN(d) && d.getFullYear() > 2000 && d.getFullYear() < 2100) {
+    return d.toISOString().slice(0,10);
+  }
+  return null;
+}
+
+function parseRedfin(csv) {
+  const allLines = csv.split('\n').map(l=>l.trim()).filter(l=>l);
+  if (allLines.length < 2) { alert('CSV is empty or unreadable.'); return; }
+
+  // Detect "date in A1" format: first cell of row 1 parses as a date.
+  const firstCells = parseCSVRow(allLines[0]);
+  const detectedDate = tryParseSnapshotDate(firstCells[0]);
+
+  let headers, dataLines;
+  if (detectedDate) {
+    // Row 1 is the date, row 2 is headers, rest is data
+    headers = parseCSVRow(allLines[1]).map(h=>h.toUpperCase().trim());
+    dataLines = allLines.slice(2).filter(l => !l.toLowerCase().startsWith('"in accordance'));
+  } else {
+    // Standard Redfin format: row 1 is headers, skip "In accordance" disclaimer
+    headers = firstCells.map(h=>h.toUpperCase().trim());
+    dataLines = allLines.slice(1).filter(l => !l.toLowerCase().startsWith('"in accordance'));
+  }
+
+  const col = name => headers.indexOf(name);
+  const SOLD_DATE=col('SOLD DATE'), PRICE_COL=col('PRICE');
+  const STATUS=col('STATUS'), LOCATION=col('LOCATION'), PROP_TYPE=col('PROPERTY TYPE');
+
+  if (PRICE_COL<0) { alert('Could not read this CSV — make sure it\'s a Redfin export.'); return; }
+
+  // Anchor the trailing-3-month window to the snapshot date if we have one,
+  // otherwise to today.
+  const anchor = detectedDate ? new Date(detectedDate + 'T12:00:00') : new Date();
+  const cutoff = new Date(anchor); cutoff.setMonth(cutoff.getMonth()-3);
+
+  const counts = BANDS.map(()=>({active:0,pendings:0,sales3mo:0}));
+  let total=0, excluded=0;
+
+  dataLines.forEach(line => {
+    if (!line.trim()) return;
+    const cols = parseCSVRow(line);
+    if (cols.length<8) return;
+    // No neighborhood exclusions for condo/townhome tracker
+    const propType = (cols[PROP_TYPE]||'').toLowerCase();
+    if (propType && !propType.includes('condo') && !propType.includes('townhouse') && !propType.includes('townhome') && !propType.includes('co-op')) return;
+    const price = parseFloat((cols[PRICE_COL]||'').replace(/[$,\s]/g,''));
+    if (isNaN(price)) return;
+    const bandIdx = BAND_RANGES.findIndex(([lo,hi])=>price>=lo&&price<hi);
+    if (bandIdx<0) return;
+
+    const status = (cols[STATUS]||'').trim().toLowerCase();
+    if (status==='active') {
+      counts[bandIdx].active++; total++;
+    } else if (status.includes('pending')||status.includes('contingent')) {
+      counts[bandIdx].pendings++; total++;
+    } else if (status==='sold') {
+      const soldStr = (cols[SOLD_DATE]||'').trim();
+      if (soldStr) {
+        const datePart = soldStr.split(' ')[0].replace(/-/g,' ');
+        const soldDate = new Date(datePart);
+        if (!isNaN(soldDate)&&soldDate>=cutoff) { counts[bandIdx].sales3mo++; total++; }
+      }
+    }
+  });
+
+  counts.forEach((c,i)=>{
+    ['a','p','s'].forEach((pfx,j)=>{
+      const val=j===0?c.active:j===1?c.pendings:c.sales3mo;
+      const el=document.getElementById(pfx+i);
+      el.value=val;
+      el.classList.toggle('csv-filled', val>0);
+    });
+  });
+
+  // Use detected date if present, otherwise today
+  document.getElementById('snapDate').value = detectedDate || new Date().toISOString().slice(0,10);
+
+  const hint = document.getElementById('csvSuccess');
+  hint.style.display='block';
+  const dateNote = detectedDate
+    ? ` Snapshot date <strong>${detectedDate}</strong> read from cell A1.`
+    : ` No date in cell A1 — using today's date.`;
+  hint.innerHTML=`<strong>&#10003; CSV parsed!</strong> Found ${total} condos/townhomes across your price bands.${dateNote} Click <strong>Save &amp; Push to GitHub</strong> to publish.`;
+}
+
+// ── INIT ────────────────────────────────────────────────
+function applyGhSettingsToForm() {
+  const s = loadGhSettings();
+  document.getElementById('ghRepo').value = s.repo || '';
+  document.getElementById('ghBranch').value = s.branch || 'main';
+  document.getElementById('ghToken').value = s.token || '';
+  if (s.token && s.repo) setGhStatus('warn', 'configured — click Test connection');
+  else setGhStatus('unknown', 'click to configure');
+}
+
+async function init() {
+  applyGhSettingsToForm();
+
+  // Try data.json first (always-fresh)
+  try {
+    DATA = await fetchDataJson();
+  } catch (e) {
+    console.warn('data.json fetch failed, falling back to local cache', e);
+    DATA = loadCachedData() || FALLBACK;
+  }
+
+  // Make sure shape is sane
+  if (!DATA.dashboard) DATA.dashboard = FALLBACK.dashboard;
+  if (!Array.isArray(DATA.snapshots)) DATA.snapshots = [];
+
+  cacheData(DATA);
+  renderDashboard(DATA.dashboard);
+  renderEntryForm(DATA.dashboard);
+}
+
+// Persist GH settings on every keystroke (and on blur, for paste safety).
+// Wait for DOMContentLoaded so the elements exist.
+function attachGhListeners() {
+  ['ghRepo','ghBranch','ghToken'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', saveGhSettings);
+    el.addEventListener('change', saveGhSettings);
+    el.addEventListener('blur', saveGhSettings);
+  });
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', attachGhListeners);
+} else {
+  attachGhListeners();
+}
+
+init();
+</script>
+</body>
+</html>
